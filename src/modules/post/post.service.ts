@@ -26,7 +26,8 @@ const getAllPosts = async (
   limit: number,
   skip: number,
   sortBy: string,
-  sortOrder: string
+  sortOrder: string,
+  page: number
 ) => {
   const searchMethod: PostWhereInput[] = [];
   if (payload.search) {
@@ -88,7 +89,21 @@ const getAllPosts = async (
       [sortBy]: sortOrder,
     },
   });
-  return result;
+
+  const total = await prisma.post.count({
+    where: {
+      AND: searchMethod,
+    },
+  });
+  return {
+    data: result,
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    },
+  };
 };
 
 export const PostService = {

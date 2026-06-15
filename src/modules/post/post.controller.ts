@@ -42,7 +42,7 @@ const getAllposts = async (req: Request, res: Response) => {
       limit,
       skip,
       sortBy,
-      sortOrder
+      sortOrder,page
     );
     res.status(200).json(result);
   } catch (error) {
