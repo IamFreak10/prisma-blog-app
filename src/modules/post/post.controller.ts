@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { PostService } from './post.service';
 import { PostStatus } from '../../../generated/prisma/enums';
 import paginationHelper from '../../helpers/paginationSortingHelper';
-import { error } from 'node:console';
 
 const createPost = async (req: Request, res: Response) => {
   try {
@@ -65,8 +64,30 @@ const getPostById = async (req: Request, res: Response) => {
     res.status(200).json(result);
   } catch (error) {}
 };
+
+const deletePost = async (req: Request, res: Response) => {
+console.log("HIT");
+  try {
+    const { PostId } = req.params;
+    const authorId = req.user?.id
+    if (!PostId) {
+      throw new Error('PostId not found');
+    }
+    const result = await PostService.deletePost(PostId as string);
+    res.status(200).json(result);
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      error: 'Post arent found',
+      details: error,
+    });
+  }
+};
+
+
 export const PostController = {
   createPost,
   getAllposts,
   getPostById,
+  deletePost
 };

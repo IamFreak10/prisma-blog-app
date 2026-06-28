@@ -24,6 +24,63 @@ const createComment = async (payload: {
   });
 };
 
+const getCommentById = async (commentId: string) => {
+  return await prisma.comment.findUniqueOrThrow({
+    where: {
+      id: commentId,
+    },
+    include: {
+      post: {
+        select: {
+          id: true,
+          title: true,
+          views: true,
+        },
+      },
+    },
+  });
+};
+
+const getCommentsByAuthorId = async (authorId: string) => {
+  return await prisma.comment.findMany({
+    where: {
+      authorId,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+    include: {
+      post: {
+        select: {
+          id: true,
+          title: true,
+          views: true,
+        },
+      },
+    },
+  });
+};
+
+const deleteComment = async (commentId: string, authorId: string) => {
+  const comentData = await prisma.comment.findUnique({
+    where: {
+      id: commentId,
+      authorId,
+    },
+  });
+  if (!comentData) {
+    throw new Error('You are not authorized to delete this comment');
+  }
+
+  return await prisma.comment.delete({
+    where: {
+      id: commentId,
+    },
+  });
+};
 export const CommentService = {
   createComment,
+  getCommentById,
+  getCommentsByAuthorId,
+  deleteComment,
 };

@@ -88,6 +88,14 @@ const getAllPosts = async (
       //computed property names createdAt:asc
       [sortBy]: sortOrder,
     },
+    include: {
+      comments: true,
+      _count: {
+        select: {
+          comments: true,
+        },
+      },
+    },
   });
 
   const total = await prisma.post.count({
@@ -122,12 +130,48 @@ const getPostById = async (PostId: string) => {
       where: {
         id: PostId,
       },
+      include: {
+        comments: {
+          where: {
+            parentId: null,
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+          include: {
+            replies: {
+              orderBy: {
+                createdAt: 'asc',
+              },
+            },
+          },
+        },
+      },
     });
     return postData;
+  });
+};
+
+const deletePost = async (PostId: string) => {
+  const postData = await prisma.post.findUnique({
+    where: {
+      id: PostId,
+      // authorId,
+    },
+  });
+
+  if (!postData) {
+    throw new Error('You are not authorized to delete this post');
+  }
+  return await prisma.post.delete({
+    where: {
+      id: PostId,
+    },
   });
 };
 export const PostService = {
   createPost,
   getAllPosts,
   getPostById,
+  deletePost,
 };
