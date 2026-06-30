@@ -1,3 +1,4 @@
+import { CommentStatus } from '../../../generated/prisma/enums';
 import { prisma } from '../../lib/prisma';
 
 const createComment = async (payload: {
@@ -78,9 +79,65 @@ const deleteComment = async (commentId: string, authorId: string) => {
     },
   });
 };
+
+const updateComment = async (
+  commentId: string,
+  data: { content: string; status: CommentStatus },
+  authorId: string
+) => {
+  const commentData = await prisma.comment.findUnique({
+    where: {
+      id: commentId,
+      authorId,
+    },
+  });
+  if (!commentData) {
+    throw new Error('You are not authorized to update this comment');
+  }
+
+  return await prisma.comment.update({
+    where: {
+      id: commentId,
+    },
+    data: {
+      content: data.content,
+      status: data.status,
+    },
+  });
+};
+
+const moderateComment = async (
+  commentId: string,
+  data: { status: CommentStatus }
+) => {
+  const commentData = await prisma.comment.findUniqueOrThrow({
+    where: {
+      id: commentId,
+    },
+    select: {
+      id: true,
+      status: true,
+    },
+  });
+
+  if (commentData.status === data.status) {
+    throw new Error(`Your provided status is already ${data.status}`);
+  }
+
+  return await prisma.comment.update({
+    where: {
+      id: commentId,
+    },
+    data: {
+      status: data.status,
+    },
+  });
+};
 export const CommentService = {
   createComment,
   getCommentById,
   getCommentsByAuthorId,
   deleteComment,
+  updateComment,
+  moderateComment,
 };

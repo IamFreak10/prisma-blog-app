@@ -169,9 +169,73 @@ const deletePost = async (PostId: string) => {
     },
   });
 };
+
+const getMyposts = async (id: string) => {
+  await prisma.user.findUniqueOrThrow({
+    where: {
+      id,
+      status: 'ACTIVE',
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  const result = await prisma.post.findMany({
+    where: {
+      authorId: id,
+    },
+    include: {
+      comments: true,
+      _count: {
+        select: {
+          comments: true,
+        },
+      },
+    },
+  });
+  return result;
+};
+
+const updatePost = async (
+  postId: string,
+  data: Partial<Post>,
+  authorId: string,
+  isAdmin: boolean
+) => {
+  const postData = await prisma.post.findUniqueOrThrow({
+    where: {
+      id: postId,
+    },
+    select: {
+      id: true,
+      authorId: true,
+    },
+  });
+
+  if (!isAdmin && postData.authorId !== authorId) {
+    throw new Error('You are not the owner/creator of the post!');
+  }
+
+  if (!isAdmin) {
+    delete data.isFeatured;
+  }
+
+  const result = await prisma.post.update({
+    where: {
+      id: postData.id,
+    },
+    data,
+  });
+
+  return result;
+};
+
 export const PostService = {
   createPost,
   getAllPosts,
   getPostById,
   deletePost,
+  getMyposts,
+  updatePost,
 };

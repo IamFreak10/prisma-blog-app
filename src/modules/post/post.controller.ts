@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { PostService } from './post.service';
 import { PostStatus } from '../../../generated/prisma/enums';
 import paginationHelper from '../../helpers/paginationSortingHelper';
+import { UserRole } from '../../middlewares/auth';
 
 const createPost = async (req: Request, res: Response) => {
   try {
@@ -66,10 +67,10 @@ const getPostById = async (req: Request, res: Response) => {
 };
 
 const deletePost = async (req: Request, res: Response) => {
-console.log("HIT");
+  console.log('HIT');
   try {
     const { PostId } = req.params;
-    const authorId = req.user?.id
+    const authorId = req.user?.id;
     if (!PostId) {
       throw new Error('PostId not found');
     }
@@ -84,10 +85,50 @@ console.log("HIT");
   }
 };
 
+const getMyposts = async (req: Request, res: Response) => {
+  try {
+    const id = req.user?.id;
+    const result = await PostService.getMyposts(id as string);
+    res.status(200).json(result);
+  } catch (error) {
+    console.log(error);
+    res.status(400).json({
+      error: 'Post arent found',
+      details: error,
+    });
+  }
+};
+
+const updatePost = async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      throw new Error('You are unauthorized!');
+    }
+
+    const { PostId } = req.params;
+    const isAdmin = user.role === UserRole.ADMIN;
+    const result = await PostService.updatePost(
+      PostId as string,
+      req.body,
+      user.id,
+      isAdmin
+    );
+    res.status(200).json(result);
+  } catch (e) {
+    const errorMessage = e instanceof Error ? e.message : 'Post update failed!';
+    res.status(400).json({
+      error: errorMessage,
+      details: e,
+    });
+  }
+};
 
 export const PostController = {
   createPost,
   getAllposts,
   getPostById,
-  deletePost
+  deletePost,
+  getMyposts,
+  updatePost,
 };

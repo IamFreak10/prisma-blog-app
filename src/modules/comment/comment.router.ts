@@ -16,4 +16,16 @@ router.delete(
   auth(UserRole.ADMIN, UserRole.USER),
   CommentController.deleteComment
 );
+
+router.patch(
+  '/:commentId',
+  auth(UserRole.ADMIN, UserRole.USER),
+  CommentController.updateComment
+);
+
+router.patch(
+  '/moderate/:commentId',
+  auth(UserRole.ADMIN),
+  CommentController.moderateComment
+);
 export const commentRouter: Router = router;
