@@ -124,6 +124,17 @@ const updatePost = async (req: Request, res: Response) => {
   }
 };
 
+const getStats=async(req:Request,res:Response)=>{
+  try {
+    const result=await PostService.getStats()
+    res.status(200).json(result)
+  } catch (e) {
+    res.status(400).json({
+      message:e
+    })
+  }
+}
+
 export const PostController = {
   createPost,
   getAllposts,
@@ -131,4 +142,5 @@ export const PostController = {
   deletePost,
   getMyposts,
   updatePost,
+  getStats
 };

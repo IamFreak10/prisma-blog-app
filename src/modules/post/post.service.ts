@@ -231,6 +231,46 @@ const updatePost = async (
   return result;
 };
 
+const getStats = async () => {
+  return await prisma.$transaction(async (tx) => {
+    const [
+      totalPosts,
+      publishedPosts,
+      draftsPost,
+      archivedPosts,
+      totalComments,
+      totalUsers,
+      adminCount,
+      userCount,
+      totalViews,
+    ] = await Promise.all([
+      await tx.post.count(),
+      await tx.post.count({ where: { status: PostStatus.PUBLISHED } }),
+      await tx.post.count({ where: { status: PostStatus.DRAFT } }),
+      await tx.post.count({ where: { status: PostStatus.ACHIEVED } }),
+      await tx.comment.count(),
+      await tx.user.count(),
+      await tx.user.count({ where: { role: 'ADMIN' } }),
+      await tx.user.count({ where: { role: 'USER' } }),
+      await tx.post.aggregate({
+        _sum: {
+          views: true,
+        },
+      }),
+    ]);
+    return {
+      totalPosts,
+      publishedPosts,
+      draftsPost,
+      archivedPosts,
+      totalComments,
+      totalUsers,
+      adminCount,
+      userCount,
+      totalViews,
+    };
+  });
+};
 export const PostService = {
   createPost,
   getAllPosts,
@@ -238,4 +278,5 @@ export const PostService = {
   deletePost,
   getMyposts,
   updatePost,
+  getStats,
 };
