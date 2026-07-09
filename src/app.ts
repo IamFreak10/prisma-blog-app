@@ -5,6 +5,7 @@ import cors from 'cors';
 import { auth } from './lib/auth';
 import { commentRouter } from './modules/comment/comment.router';
 import { errorHandler } from './middlewares/errorHandler';
+import { notFound } from './middlewares/notFound';
 const app: Application = express();
 
 app.use(express.json());
@@ -22,4 +23,5 @@ app.get('/', (req, res) => {
   res.send('Blog App!');
 });
 app.use(errorHandler);
+app.use(notFound);
 export default app;
