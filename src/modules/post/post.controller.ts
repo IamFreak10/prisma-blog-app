@@ -1,10 +1,10 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { PostService } from './post.service';
 import { PostStatus } from '../../../generated/prisma/enums';
 import paginationHelper from '../../helpers/paginationSortingHelper';
 import { UserRole } from '../../middlewares/auth';
 
-const createPost = async (req: Request, res: Response) => {
+const createPost = async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!req.user)
       return res.status(401).json({ error: 'You are not authorized!' });
@@ -12,10 +12,7 @@ const createPost = async (req: Request, res: Response) => {
 
     res.status(201).json(result);
   } catch (error) {
-    res.status(400).json({
-      error: 'Post creation Failed',
-      details: error,
-    });
+    next(error);
   }
 };
 
@@ -55,7 +52,7 @@ const getAllposts = async (req: Request, res: Response) => {
   }
 };
 
-const getPostById = async (req: Request, res: Response) => {
+const getPostById = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { PostId } = req.params;
     if (!PostId) {
@@ -63,7 +60,9 @@ const getPostById = async (req: Request, res: Response) => {
     }
     const result = await PostService.getPostById(PostId as string);
     res.status(200).json(result);
-  } catch (error) {}
+  } catch (error) {
+    next(error);
+  }
 };
 
 const deletePost = async (req: Request, res: Response) => {
@@ -124,16 +123,16 @@ const updatePost = async (req: Request, res: Response) => {
   }
 };
 
-const getStats=async(req:Request,res:Response)=>{
+const getStats = async (req: Request, res: Response) => {
   try {
-    const result=await PostService.getStats()
-    res.status(200).json(result)
+    const result = await PostService.getStats();
+    res.status(200).json(result);
   } catch (e) {
     res.status(400).json({
-      message:e
-    })
+      message: e,
+    });
   }
-}
+};
 
 export const PostController = {
   createPost,
@@ -142,5 +141,5 @@ export const PostController = {
   deletePost,
   getMyposts,
   updatePost,
-  getStats
+  getStats,
 };
